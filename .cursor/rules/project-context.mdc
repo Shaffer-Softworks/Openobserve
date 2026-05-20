@@ -1,56 +1,26 @@
 ---
-description: Home Assistant OpenObserve integration — architecture, deploy, and known fixes
+description: HACS OpenObserve integration repo (not the Supervisor add-on)
 alwaysApply: true
 ---
 
-# OpenObserve HA project context
+# home-assistant-openobserve (HACS only)
 
-## Repo
+## Scope
 
-- **HACS integration**: `custom_components/openobserve/` (domain `openobserve`, v0.1.2+)
-- **Supervisor add-on** (HA OS only): `openobserve_log_shipper/` (Fluent Bit → `/_multi`)
-- **Docker test deploy**: `deploy/docker/run.sh` or `deploy/portainer/run-containers.sh`
+- **This repo**: `custom_components/openobserve/` — HACS integration
+- **Add-on repo**: https://github.com/Shaffer-Softworks/home-assistant-openobserve-addon (`openobserve_log_shipper/`)
 
-## Architecture
+## Integration
 
-| Piece | Runs in container HA? | Ingest |
-|-------|---------------------|--------|
-| Integration | Yes | `POST /api/{org}/{stream}/_json` (JSON array) |
-| Log shipper add-on | No (needs Supervisor) | `/_multi` NDJSON |
+- Ingest: `POST /api/{org}/{stream}/_json` (JSON array)
+- Default streams: `home_assistant_logs`, `home_assistant_events`
+- Flush: 5s / batch 50
+- Docker test URL: `http://openobserve:5080`
 
-Default streams: `home_assistant_logs`, `home_assistant_events`. Batching: **50 records** or **5s** flush (options).
+## Config flow
 
-## Docker (local test)
+`OpenObserveOptionsFlowHandler` uses `self._config_entry` only (HA 2025.12+). No `super().__init__(config_entry)`.
 
-```bash
-export ZO_ROOT_USER_PASSWORD='...'
-./deploy/docker/run.sh
-```
+## Deploy test
 
-- OpenObserve: http://localhost:5080
-- HA: http://localhost:8123
-- **Integration base URL must be** `http://openobserve:5080` (service name), not `localhost`
-
-Bind-mount: `custom_components/openobserve` → `/config/custom_components/openobserve`.
-
-## OpenObserve auth
-
-`ZO_ROOT_USER_EMAIL` / `ZO_ROOT_USER_PASSWORD` apply **only on first boot** with an **empty** data volume. Changing env later does not reset password — delete volume `openobserve-data` and recreate.
-
-## Config flow (HA 2025.12+)
-
-`OpenObserveOptionsFlowHandler` must **not** assign `self.config_entry` (read-only). Use `self._config_entry` in `__init__`; do **not** call `super().__init__(config_entry)` (raises `TypeError`).
-
-Setup schema: all fields use `TextSelector`, not bare `str`.
-
-## Production LAN
-
-User also runs OpenObserve at `http://10.20.0.54:5080` (org `default`). Credentials live in local gitignored rules, not in repo.
-
-## Icons
-
-Brand assets from [Dashboard Icons `open-observe`](https://dashboardicons.com/icons/open-observe) (homarr-labs/dashboard-icons, Apache-2.0). HACS validate uses `ignore: brands`.
-
-## HACS
-
-`hacs.json`, hassfest + hacs/action in `.github/workflows/validate.yaml`. Publish: `Shaffer-Softworks/home-assistant-openobserve`.
+`./deploy/docker/run.sh` — does not include the Supervisor add-on.
