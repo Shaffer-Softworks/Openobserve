@@ -71,7 +71,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenObserveConfigEntry) 
         level = getattr(logging, level_name.upper(), logging.INFO)
         return level >= min_level
 
-    def handle_system_log(event: Event) -> None:
+    async def handle_system_log(event: Event) -> None:
         data = event.data
         if not _log_level_ok(data.get("level", "INFO")):
             return
@@ -100,7 +100,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenObserveConfigEntry) 
         *,
         state_only: bool = True,
     ):
-        def _handler(event: Event) -> None:
+        async def _handler(event: Event) -> None:
             if event_type == "state_changed":
                 entity_id = event.data.get("entity_id")
                 if entity_matches_exclude(entity_id, exclude_patterns):
