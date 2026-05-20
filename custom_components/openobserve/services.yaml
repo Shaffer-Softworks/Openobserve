@@ -1,0 +1,3 @@
+flush:
+  name: Flush
+  description: Immediately send buffered logs and events to OpenObserve.

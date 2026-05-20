@@ -1,0 +1,5 @@
+# Example snippet for your HA add-ons repository.yaml
+# Add the openobserve_log_shipper folder path after copying into your addons repo.
+name: Shaffer Softworks Add-ons
+url: https://github.com/Shaffer-Softworks/home-assistant-openobserve
+maintainer: Shaffer Softworks
