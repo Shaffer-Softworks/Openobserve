@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.0 (2026-05-20)
+
+- Split Supervisor add-on to [home-assistant-openobserve-addon](https://github.com/Shaffer-Softworks/home-assistant-openobserve-addon)
+- This repo is HACS integration only
+
 ## 0.1.0 (2026-05-17)
 
 - Initial HACS integration: logs and HA bus events to OpenObserve `/_json`

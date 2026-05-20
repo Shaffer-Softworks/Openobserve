@@ -5,7 +5,7 @@
 #   - custom_components/openobserve (logs + events → OpenObserve /_json)
 #
 # What this does NOT test:
-#   - openobserve_log_shipper add-on (requires Home Assistant OS / Supervisor, not plain container HA)
+#   - Optional: home-assistant-openobserve-addon (Supervisor only, not plain container HA)
 #
 # After first boot (~2 min):
 #   - HA UI: http://<host>:8123
