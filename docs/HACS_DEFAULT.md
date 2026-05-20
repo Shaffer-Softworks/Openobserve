@@ -25,11 +25,18 @@ Target: include **Shaffer-Softworks/Openobserve** in [hacs/default](https://gith
 
 **Open:** https://github.com/hacs/default/pull/7820 (from `sickkick/HACS` branch `add-openobserve`)
 
+| Check | Status (2026-05-20) |
+|-------|---------------------|
+| Sorted, JQ, Hassfest, HACS action, Owner, Releases, etc. | All green |
+| Next step | Mark PR **Ready for review** |
+
 1. Fork `hacs/default` to a personal account (e.g. `sickkick/HACS`).
 2. Branch from `master`.
 3. Add `"Shaffer-Softworks/Openobserve"` to `integration` sorted with `key=str.casefold` (after `hyperhdr-ha`, before `shaiu/technicolor`).
 4. PR body must include the [checklist and three action/release links](https://github.com/hacs/default/blob/master/.github/PULL_REQUEST_TEMPLATE.md).
 5. Mark **ready for review** after CI passes (do not request review early).
+
+**Validate run (integration repo):** https://github.com/Shaffer-Softworks/Openobserve/actions/runs/26174295004
 
 ## After merge
 

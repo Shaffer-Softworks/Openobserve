@@ -3,24 +3,46 @@ description: HACS OpenObserve integration repo (not the Supervisor add-on)
 alwaysApply: true
 ---
 
-# home-assistant-openobserve (HACS only)
+# Shaffer-Softworks/Openobserve (HACS integration)
 
-## Scope
+## Repos (split 2026-05-20)
 
-- **This repo**: `custom_components/openobserve/` — HACS integration
-- **Add-on repo**: https://github.com/Shaffer-Softworks/home-assistant-openobserve-addon (`openobserve_log_shipper/`)
+| Repo | Purpose |
+|------|---------|
+| **This repo** — https://github.com/Shaffer-Softworks/Openobserve | HACS integration `custom_components/openobserve/` |
+| **Add-on** — https://github.com/Shaffer-Softworks/home-assistant-openobserve-addon | Supervisor `openobserve_log_shipper/` (Fluent Bit → `/_multi`) |
 
-## Integration
+Git remote may still show `sickkick/Openobserve` (redirects to Shaffer-Softworks). Integration v**0.2.0**, release tag `v0.2.0`.
 
-- Ingest: `POST /api/{org}/{stream}/_json` (JSON array)
+## Integration behavior
+
+- Domain: `openobserve`
+- Ingest: `POST /api/{org}/{stream}/_json` (JSON array batches)
 - Default streams: `home_assistant_logs`, `home_assistant_events`
-- Flush: 5s / batch 50
-- Docker test URL: `http://openobserve:5080`
+- Batching: 50 records or 5s; service `openobserve.flush`; diagnostic sensors
+- Brand: `custom_components/openobserve/brand/` (Dashboard Icons open-observe, Apache-2.0)
+- HACS: `hacs.json`, `info.md`, `.github/workflows/validate.yaml` (hassfest + HACS, no `ignore: brands`)
 
-## Config flow
+## Config flow (HA 2025.12+)
 
-`OpenObserveOptionsFlowHandler` uses `self._config_entry` only (HA 2025.12+). No `super().__init__(config_entry)`.
+`OpenObserveOptionsFlowHandler` must use `self._config_entry` only. Do **not** set `self.config_entry` or call `super().__init__(config_entry)` (caused 500 / AttributeError).
 
-## Deploy test
+User-step fields use `TextSelector`, not bare `str`.
 
-`./deploy/docker/run.sh` — does not include the Supervisor add-on.
+## HACS default inclusion (in progress)
+
+- PR: https://github.com/hacs/default/pull/7820
+- Fork: `sickkick/HACS` branch `add-openobserve`
+- List entry: `"Shaffer-Softworks/Openobserve"` in `integration` (casefold sort: after `hyperhdr-ha`, before `shaiu/technicolor`)
+- After all CI green → mark PR **Ready for review** (do not request review early)
+- Details: `docs/HACS_DEFAULT.md`
+
+## Deploy / test
+
+- `./deploy/docker/run.sh` → `openobserve` + `homeassistant` containers; integration URL **`http://openobserve:5080`**
+- Production LAN OpenObserve: `http://10.20.0.54:5080` (not for local Docker test)
+- Add-on does **not** run in plain container HA (Supervisor only)
+
+## Git hygiene
+
+Commit messages must **not** include `Co-authored-by: Cursor`. History was rewritten 2026-05-20; force-push if amending old SHAs.

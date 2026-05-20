@@ -36,6 +36,4 @@ class ExportingLogHandler(logging.Handler):
                 traceback.format_exception(*record.exc_info)
             )
         o2_record = system_log_to_record(event_data)
-        self._hass.loop.call_soon_threadsafe(
-            self._client.enqueue_log, o2_record
-        )
+        self._client.enqueue_log(o2_record)
