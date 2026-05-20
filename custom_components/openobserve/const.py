@@ -1,10 +1,6 @@
 """Constants for the OpenObserve integration."""
 
-from homeassistant.const import Platform
-
 DOMAIN = "openobserve"
-
-PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 CONF_BASE_URL = "base_url"
 CONF_ORGANIZATION = "organization"

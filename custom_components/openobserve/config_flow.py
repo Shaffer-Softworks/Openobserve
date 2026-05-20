@@ -53,18 +53,25 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+def _text_selector(*, password: bool = False, multiline: bool = False) -> TextSelector:
+    return TextSelector(
+        TextSelectorConfig(
+            type=TextSelectorType.PASSWORD if password else TextSelectorType.TEXT,
+            multiline=multiline,
+        )
+    )
+
+
 STEP_USER_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_BASE_URL): TextSelector(
             TextSelectorConfig(type=TextSelectorType.URL)
         ),
-        vol.Required(CONF_ORGANIZATION, default=DEFAULT_ORGANIZATION): str,
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): TextSelector(
-            TextSelectorConfig(type=TextSelectorType.PASSWORD)
-        ),
-        vol.Required(CONF_LOG_STREAM, default=DEFAULT_LOG_STREAM): str,
-        vol.Required(CONF_EVENT_STREAM, default=DEFAULT_EVENT_STREAM): str,
+        vol.Required(CONF_ORGANIZATION, default=DEFAULT_ORGANIZATION): _text_selector(),
+        vol.Required(CONF_USERNAME): _text_selector(),
+        vol.Required(CONF_PASSWORD): _text_selector(password=True),
+        vol.Required(CONF_LOG_STREAM, default=DEFAULT_LOG_STREAM): _text_selector(),
+        vol.Required(CONF_EVENT_STREAM, default=DEFAULT_EVENT_STREAM): _text_selector(),
     }
 )
 
@@ -181,10 +188,10 @@ class OpenObserveConfigFlow(ConfigFlow, domain=DOMAIN):
 
 
 class OpenObserveOptionsFlowHandler(OptionsFlow):
-    """Handle options."""
+    """Handle options (HA 2025+: do not assign self.config_entry — read-only)."""
 
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        self.config_entry = config_entry
+        self._config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -193,8 +200,20 @@ class OpenObserveOptionsFlowHandler(OptionsFlow):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
-        merged = {**self.config_entry.options}
+        defaults: dict[str, Any] = {
+            CONF_LOG_LEVEL: DEFAULT_LOG_LEVEL,
+            CONF_EVENT_BASED_LOGGING: DEFAULT_EVENT_BASED_LOGGING,
+            CONF_LOG_HA_LIFECYCLE: True,
+            CONF_LOG_HA_STATE_CHANGES: True,
+            CONF_LOG_HA_FULL_STATE_CHANGES: False,
+            CONF_LOG_HA_CORE_ACTIVITY: True,
+            CONF_LOG_HA_EVENT_BODY: False,
+            CONF_STATE_CHANGED_EXCLUDE: "sensor.*\ndevice_tracker.*",
+            CONF_BATCH_SIZE: DEFAULT_BATCH_SIZE,
+            CONF_FLUSH_INTERVAL: DEFAULT_FLUSH_INTERVAL,
+        }
+        defaults.update(self._config_entry.options)
         return self.async_show_form(
             step_id="init",
-            data_schema=_options_schema(merged),
+            data_schema=_options_schema(defaults),
         )

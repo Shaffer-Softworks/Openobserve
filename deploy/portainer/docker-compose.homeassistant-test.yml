@@ -1,0 +1,30 @@
+# Home Assistant test container — uses EXISTING OpenObserve stack on network openobserve_default
+# Deploy as stack "ha-openobserve-test" (Portainer) after stack "openobserve" is running.
+#
+# Portainer host must have this repo path (adjust OPENOBSERVE_REPO if needed):
+#   /Users/michaelshaffer/Openobserve/custom_components/openobserve
+#
+# HA UI: http://<docker-host>:8123
+# Integration URL: http://openobserve:5080
+
+services:
+  homeassistant:
+    image: ghcr.io/home-assistant/home-assistant:stable
+    container_name: homeassistant-test
+    restart: unless-stopped
+    ports:
+      - "8123:8123"
+    volumes:
+      - ha-test-config:/config
+      - ${OPENOBSERVE_REPO:-/Users/michaelshaffer/Openobserve}/custom_components/openobserve:/config/custom_components/openobserve:ro
+    environment:
+      TZ: ${TZ:-America/New_York}
+    networks:
+      - openobserve_default
+
+networks:
+  openobserve_default:
+    external: true
+
+volumes:
+  ha-test-config:

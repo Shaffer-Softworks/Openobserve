@@ -6,3 +6,8 @@ __pycache__/
 *.egg-info/
 .pytest_cache/
 .ruff_cache/
+.cache-open-observe.*
+deploy/portainer/.env
+
+# Keep Cursor rules in repo; ignore local-only overrides if added later
+.cursor/*.local.*
