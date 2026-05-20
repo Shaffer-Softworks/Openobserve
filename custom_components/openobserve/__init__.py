@@ -9,7 +9,7 @@ from typing import Any
 
 from homeassistant.components.system_log import EVENT_SYSTEM_LOG
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import EVENT_HOMEASSISTANT_CLOSE, EVENT_HOMEASSISTANT_FINAL_WRITE, HomeAssistant, Event
 from homeassistant.helpers import config_validation as cv
 
@@ -27,19 +27,21 @@ from .const import (
     CORE_STATE_EVENTS,
     DOMAIN,
     LIFECYCLE_EVENTS,
-    PLATFORMS,
     REF_CANCEL_LISTENERS,
     REF_CLIENT,
     REF_FLUSH_TASK,
     REF_LOG_HANDLER,
     SERVICE_FLUSH,
 )
-from .handler import entity_matches_exclude, ha_event_to_record, system_log_to_record
+from .handler import ha_event_to_record, system_log_to_record
+from .util import entity_matches_exclude
 from .log_handler import ExportingLogHandler
 
 _LOGGER = logging.getLogger(__name__)
 
 type OpenObserveConfigEntry = ConfigEntry[OpenObserveClient]
+
+PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
 async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:

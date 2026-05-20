@@ -4,11 +4,12 @@ from __future__ import annotations
 
 import json
 from datetime import UTC, datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from homeassistant.core import Event, State
+from .util import entity_matches_exclude, redact_secrets
 
-from .const import SECRET_KEYS
+if TYPE_CHECKING:
+    from homeassistant.core import Event, State
 
 SERVICE_NAME = "home-assistant"
 APP_NAME = "core"
@@ -22,19 +23,7 @@ def _iso_timestamp(dt: datetime | None = None) -> str:
     return dt.astimezone(UTC).isoformat().replace("+00:00", "Z")
 
 
-def redact_secrets(data: Any) -> Any:
-    """Recursively redact known secret keys."""
-    if isinstance(data, dict):
-        return {
-            k: "[REDACTED]" if k.lower() in SECRET_KEYS else redact_secrets(v)
-            for k, v in data.items()
-        }
-    if isinstance(data, list):
-        return [redact_secrets(item) for item in data]
-    return data
-
-
-def _state_summary(state: State | None) -> str | None:
+def _state_summary(state: "State | None") -> str | None:
     if state is None:
         return None
     return f"{state.state}"
@@ -73,7 +62,7 @@ def system_log_to_record(event_data: dict[str, Any]) -> dict[str, Any]:
 
 
 def ha_event_to_record(
-    event: Event,
+    event: "Event",
     *,
     state_only: bool = True,
     include_body: bool = False,
@@ -135,18 +124,3 @@ def ha_event_to_record(
         record["event_data"] = json.dumps(redact_secrets(dict(data)))
 
     return record
-
-
-def entity_matches_exclude(entity_id: str | None, patterns: list[str]) -> bool:
-    """Return True if entity_id matches any glob-style exclude pattern."""
-    if not entity_id or not patterns:
-        return False
-    for pattern in patterns:
-        pattern = pattern.strip()
-        if not pattern:
-            continue
-        if pattern.endswith("*") and entity_id.startswith(pattern[:-1]):
-            return True
-        if pattern == entity_id:
-            return True
-    return False
