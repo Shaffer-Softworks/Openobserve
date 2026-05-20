@@ -1,0 +1,55 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "OpenObserve",
+        "description": "Forward Home Assistant logs and events to your OpenObserve instance.",
+        "data": {
+          "base_url": "OpenObserve URL",
+          "organization": "Organization",
+          "username": "Username",
+          "password": "Password",
+          "log_stream": "Log stream",
+          "event_stream": "Event stream"
+        },
+        "data_description": {
+          "base_url": "Base URL without trailing slash, e.g. http://10.20.0.54:5080",
+          "organization": "Organization id, usually default",
+          "log_stream": "Stream for core logs (default: home_assistant_logs)",
+          "event_stream": "Stream for bus events (default: home_assistant_events)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to OpenObserve. Check URL and network.",
+      "invalid_auth": "Authentication failed. Check username and password.",
+      "unknown": "Unexpected error during setup."
+    },
+    "abort": {
+      "already_configured": "This OpenObserve instance is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "OpenObserve options",
+        "data": {
+          "log_level": "Minimum log level",
+          "event_based_logging": "Use system log events (recommended)",
+          "log_ha_lifecycle": "Log lifecycle events",
+          "log_ha_state_changes": "Log state changes (summary)",
+          "log_ha_full_state_changes": "Log state changes (full attributes)",
+          "log_ha_core_activity": "Log service calls and automations",
+          "log_ha_event_body": "Include full event body (verbose)",
+          "state_changed_exclude": "Exclude state_changed patterns",
+          "batch_size": "Batch size",
+          "flush_interval": "Flush interval (seconds)"
+        },
+        "data_description": {
+          "state_changed_exclude": "One glob pattern per line, e.g. sensor.*",
+          "event_based_logging": "Preserves multiline stack traces as single log entries"
+        }
+      }
+    }
+  }
+}
