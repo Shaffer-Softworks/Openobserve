@@ -16,7 +16,7 @@ Streams are created on first ingest.
 ## Install (HACS)
 
 1. HACS → **Integrations** → **⋮** → **Custom repositories**
-2. Add `https://github.com/Shaffer-Softworks/home-assistant-openobserve`
+2. Add `https://github.com/Shaffer-Softworks/Openobserve` (or use **default** HACS store after inclusion)
 3. Install **OpenObserve** and restart Home Assistant
 4. **Settings → Devices & services → Add integration → OpenObserve**
 5. Base URL (e.g. `http://10.20.0.54:5080` or `http://openobserve:5080` on Docker), org `default`, credentials, stream names

@@ -3,9 +3,9 @@
   "name": "OpenObserve",
   "codeowners": ["@Shaffer-Softworks"],
   "config_flow": true,
-  "documentation": "https://github.com/Shaffer-Softworks/home-assistant-openobserve#readme",
+  "documentation": "https://github.com/Shaffer-Softworks/Openobserve#readme",
   "iot_class": "local_polling",
-  "issue_tracker": "https://github.com/Shaffer-Softworks/home-assistant-openobserve/issues",
+  "issue_tracker": "https://github.com/Shaffer-Softworks/Openobserve/issues",
   "loggers": ["openobserve"],
   "requirements": [],
   "version": "0.2.0"
