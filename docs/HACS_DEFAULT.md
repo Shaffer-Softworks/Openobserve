@@ -27,7 +27,7 @@ Target: include **Shaffer-Softworks/Openobserve** in [hacs/default](https://gith
 
 1. Fork `hacs/default` to a personal account (e.g. `sickkick/HACS`).
 2. Branch from `master`.
-3. Add `"Shaffer-Softworks/Openobserve"` to `integration` in **alphabetical** order (between `Android-Management` and `hyperhdr-ha`).
+3. Add `"Shaffer-Softworks/Openobserve"` to `integration` sorted with `key=str.casefold` (after `hyperhdr-ha`, before `shaiu/technicolor`).
 4. PR body must include the [checklist and three action/release links](https://github.com/hacs/default/blob/master/.github/PULL_REQUEST_TEMPLATE.md).
 5. Mark **ready for review** after CI passes (do not request review early).
 
