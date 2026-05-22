@@ -12,7 +12,7 @@ alwaysApply: true
 | **This repo** — https://github.com/Shaffer-Softworks/Openobserve | HACS integration `custom_components/openobserve/` |
 | **Add-on** — https://github.com/Shaffer-Softworks/home-assistant-openobserve-addon | Supervisor `openobserve_log_shipper/` (Fluent Bit → `/_multi`) |
 
-Git remote may still show `sickkick/Openobserve` (redirects to Shaffer-Softworks). Integration v**0.2.0**, release tag `v0.2.0`.
+Git remote may show `sickkick/Openobserve` (redirects to Shaffer-Softworks). Current version **0.2.2**.
 
 ## Integration behavior
 
@@ -20,29 +20,34 @@ Git remote may still show `sickkick/Openobserve` (redirects to Shaffer-Softworks
 - Ingest: `POST /api/{org}/{stream}/_json` (JSON array batches)
 - Default streams: `home_assistant_logs`, `home_assistant_events`
 - Batching: 50 records or 5s; service `openobserve.flush`; diagnostic sensors
-- Brand: `custom_components/openobserve/brand/` (Dashboard Icons open-observe, Apache-2.0)
-- HACS: `hacs.json`, `info.md`, `.github/workflows/validate.yaml` (hassfest + HACS, no `ignore: brands`)
+- Brand: `custom_components/openobserve/brand/` (Dashboard Icons, Apache-2.0)
+- HACS: `hacs.json`, `info.md`, validate workflow (hassfest + HACS, no `ignore: brands`)
+
+## Thread safety (v0.2.1+)
+
+HA runs **sync** `bus.async_listen` callbacks in a **thread pool** — do not call `hass.async_create_task` from enqueue paths.
+
+- Bus handlers: **async** `async def _handler` in `__init__.py`
+- `client.enqueue_log` / `enqueue_event`: `_run_on_hass_loop()` → `call_soon_threadsafe` when off-loop
+- Batch flush: `_schedule_flush()` → `call_soon_threadsafe` + debounced `_flush_scheduled`
+- Logging handler (`ExportingLogHandler`): calls `enqueue_log()` (thread-safe internally)
 
 ## Config flow (HA 2025.12+)
 
-`OpenObserveOptionsFlowHandler` must use `self._config_entry` only. Do **not** set `self.config_entry` or call `super().__init__(config_entry)` (caused 500 / AttributeError).
+`OpenObserveOptionsFlowHandler`: `self._config_entry` only — never `self.config_entry = …` or `super().__init__(config_entry)`. User fields use `TextSelector`.
 
-User-step fields use `TextSelector`, not bare `str`.
+## HACS default inclusion
 
-## HACS default inclusion (in progress)
-
-- PR: https://github.com/hacs/default/pull/7820
-- Fork: `sickkick/HACS` branch `add-openobserve`
-- List entry: `"Shaffer-Softworks/Openobserve"` in `integration` (casefold sort: after `hyperhdr-ha`, before `shaiu/technicolor`)
-- After all CI green → mark PR **Ready for review** (do not request review early)
-- Details: `docs/HACS_DEFAULT.md`
+- PR: https://github.com/hacs/default/pull/7820 (`sickkick/HACS`, `add-openobserve`)
+- Entry: `"Shaffer-Softworks/Openobserve"` (casefold sort: after `hyperhdr-ha`)
+- After CI green → mark **Ready for review** (see `docs/HACS_DEFAULT.md`)
 
 ## Deploy / test
 
-- `./deploy/docker/run.sh` → `openobserve` + `homeassistant` containers; integration URL **`http://openobserve:5080`**
-- Production LAN OpenObserve: `http://10.20.0.54:5080` (not for local Docker test)
-- Add-on does **not** run in plain container HA (Supervisor only)
+- `./deploy/docker/run.sh` — integration URL **`http://openobserve:5080`**
+- Production LAN: `http://10.20.0.54:5080`
+- Add-on: Supervisor only, not plain Docker HA
 
 ## Git hygiene
 
-Commit messages must **not** include `Co-authored-by: Cursor`. History was rewritten 2026-05-20; force-push if amending old SHAs.
+No `Co-authored-by: Cursor` in commits.

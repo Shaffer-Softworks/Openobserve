@@ -11,6 +11,8 @@ CONF_EVENT_STREAM = "event_stream"
 CONF_LOG_LEVEL = "log_level"
 CONF_BATCH_SIZE = "batch_size"
 CONF_FLUSH_INTERVAL = "flush_interval"
+CONF_CAPTURE_LOGS = "capture_logs"
+CONF_CAPTURE_EVENTS = "capture_events"
 CONF_EVENT_BASED_LOGGING = "event_based_logging"
 CONF_LOG_HA_LIFECYCLE = "log_ha_lifecycle"
 CONF_LOG_HA_STATE_CHANGES = "log_ha_state_changes"
@@ -25,7 +27,9 @@ DEFAULT_EVENT_STREAM = "home_assistant_events"
 DEFAULT_LOG_LEVEL = "INFO"
 DEFAULT_BATCH_SIZE = 50
 DEFAULT_FLUSH_INTERVAL = 5
-DEFAULT_EVENT_BASED_LOGGING = True
+DEFAULT_CAPTURE_LOGS = True
+DEFAULT_CAPTURE_EVENTS = True
+DEFAULT_EVENT_BASED_LOGGING = False
 
 LIFECYCLE_EVENTS: list[str] = [
     "homeassistant_start",
