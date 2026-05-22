@@ -26,6 +26,8 @@ from .client import OpenObserveClient
 from .const import (
     CONF_BASE_URL,
     CONF_BATCH_SIZE,
+    CONF_CAPTURE_EVENTS,
+    CONF_CAPTURE_LOGS,
     CONF_EVENT_BASED_LOGGING,
     CONF_EVENT_STREAM,
     CONF_FLUSH_INTERVAL,
@@ -41,6 +43,8 @@ from .const import (
     CONF_STATE_CHANGED_EXCLUDE,
     CONF_USERNAME,
     DEFAULT_BATCH_SIZE,
+    DEFAULT_CAPTURE_EVENTS,
+    DEFAULT_CAPTURE_LOGS,
     DEFAULT_EVENT_BASED_LOGGING,
     DEFAULT_EVENT_STREAM,
     DEFAULT_FLUSH_INTERVAL,
@@ -79,6 +83,14 @@ STEP_USER_SCHEMA = vol.Schema(
 def _options_schema(defaults: dict[str, Any]) -> vol.Schema:
     return vol.Schema(
         {
+            vol.Optional(
+                CONF_CAPTURE_LOGS,
+                default=defaults.get(CONF_CAPTURE_LOGS, DEFAULT_CAPTURE_LOGS),
+            ): BooleanSelector(),
+            vol.Optional(
+                CONF_CAPTURE_EVENTS,
+                default=defaults.get(CONF_CAPTURE_EVENTS, DEFAULT_CAPTURE_EVENTS),
+            ): BooleanSelector(),
             vol.Optional(
                 CONF_LOG_LEVEL, default=defaults.get(CONF_LOG_LEVEL, DEFAULT_LOG_LEVEL)
             ): SelectSelector(
@@ -159,6 +171,8 @@ class OpenObserveConfigFlow(ConfigFlow, domain=DOMAIN):
                     title="OpenObserve",
                     data=user_input,
                     options={
+                        CONF_CAPTURE_LOGS: DEFAULT_CAPTURE_LOGS,
+                        CONF_CAPTURE_EVENTS: DEFAULT_CAPTURE_EVENTS,
                         CONF_LOG_LEVEL: DEFAULT_LOG_LEVEL,
                         CONF_EVENT_BASED_LOGGING: DEFAULT_EVENT_BASED_LOGGING,
                         CONF_LOG_HA_LIFECYCLE: True,
@@ -201,6 +215,8 @@ class OpenObserveOptionsFlowHandler(OptionsFlow):
             return self.async_create_entry(title="", data=user_input)
 
         defaults: dict[str, Any] = {
+            CONF_CAPTURE_LOGS: DEFAULT_CAPTURE_LOGS,
+            CONF_CAPTURE_EVENTS: DEFAULT_CAPTURE_EVENTS,
             CONF_LOG_LEVEL: DEFAULT_LOG_LEVEL,
             CONF_EVENT_BASED_LOGGING: DEFAULT_EVENT_BASED_LOGGING,
             CONF_LOG_HA_LIFECYCLE: True,
