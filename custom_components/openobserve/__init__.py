@@ -15,6 +15,8 @@ from homeassistant.helpers import config_validation as cv
 
 from .client import OpenObserveClient
 from .const import (
+    CONF_CAPTURE_EVENTS,
+    CONF_CAPTURE_LOGS,
     CONF_EVENT_BASED_LOGGING,
     CONF_LOG_HA_CORE_ACTIVITY,
     CONF_LOG_HA_EVENT_BODY,
@@ -23,6 +25,8 @@ from .const import (
     CONF_LOG_HA_STATE_CHANGES,
     CONF_LOG_LEVEL,
     CONF_STATE_CHANGED_EXCLUDE,
+    DEFAULT_CAPTURE_EVENTS,
+    DEFAULT_CAPTURE_LOGS,
     CORE_ACTIVITY_EVENTS,
     CORE_STATE_EVENTS,
     DOMAIN,
@@ -46,6 +50,32 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     await hass.config_entries.async_reload(entry.entry_id)
+
+
+def _option_bool(opts: dict, key: str, default: bool) -> bool:
+    """Read a boolean option (config entry options are not always typed)."""
+    if key not in opts:
+        return default
+    return bool(opts[key])
+
+
+def _capture_logs_enabled(opts: dict) -> bool:
+    """Whether to ship records to the log stream."""
+    return _option_bool(opts, CONF_CAPTURE_LOGS, DEFAULT_CAPTURE_LOGS)
+
+
+def _capture_events_enabled(opts: dict) -> bool:
+    """Whether to ship records to the event stream."""
+    if CONF_CAPTURE_EVENTS in opts:
+        return _option_bool(opts, CONF_CAPTURE_EVENTS, DEFAULT_CAPTURE_EVENTS)
+    return any(
+        (
+            opts.get(CONF_LOG_HA_LIFECYCLE),
+            opts.get(CONF_LOG_HA_STATE_CHANGES),
+            opts.get(CONF_LOG_HA_FULL_STATE_CHANGES),
+            opts.get(CONF_LOG_HA_CORE_ACTIVITY),
+        )
+    )
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: OpenObserveConfigEntry) -> bool:
@@ -78,15 +108,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenObserveConfigEntry) 
         client.enqueue_log(system_log_to_record(data))
 
     log_handler: ExportingLogHandler | None = None
-    event_based = bool(opts.get(CONF_EVENT_BASED_LOGGING, True))
-    if event_based:
-        cancel_listeners.append(
-            hass.bus.async_listen(EVENT_SYSTEM_LOG, handle_system_log)
-        )
-    else:
-        log_handler = ExportingLogHandler(hass, client)
-        log_handler.setLevel(min_level)
-        logging.root.addHandler(log_handler)
+    capture_logs = _capture_logs_enabled(opts)
+    capture_events = _capture_events_enabled(opts)
+    event_based = bool(opts.get(CONF_EVENT_BASED_LOGGING, False))
+
+    if capture_logs:
+        if event_based:
+            cancel_listeners.append(
+                hass.bus.async_listen(EVENT_SYSTEM_LOG, handle_system_log)
+            )
+            _LOGGER.info(
+                "openobserve: capturing logs via system_log_event "
+                "(enable system_log.fire_event in configuration.yaml)"
+            )
+        else:
+            log_handler = ExportingLogHandler(hass, client)
+            log_handler.setLevel(min_level)
+            logging.root.addHandler(log_handler)
+            _LOGGER.info(
+                "openobserve: capturing logs via logging handler (min level %s)",
+                min_level_name,
+            )
 
     exclude_patterns = [
         p.strip()
@@ -114,37 +156,40 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenObserveConfigEntry) 
 
         return _handler
 
-    if opts.get(CONF_LOG_HA_LIFECYCLE):
-        for et in LIFECYCLE_EVENTS:
-            cancel_listeners.append(
-                hass.bus.async_listen(et, make_event_handler(et))
-            )
-        _LOGGER.info("openobserve: listening for lifecycle events")
-
-    if opts.get(CONF_LOG_HA_STATE_CHANGES):
-        for et in CORE_STATE_EVENTS:
-            cancel_listeners.append(
-                hass.bus.async_listen(
-                    et, make_event_handler(et, state_only=True)
+    if capture_events:
+        if opts.get(CONF_LOG_HA_LIFECYCLE):
+            for et in LIFECYCLE_EVENTS:
+                cancel_listeners.append(
+                    hass.bus.async_listen(et, make_event_handler(et))
                 )
-            )
-        _LOGGER.info("openobserve: listening for state changes (summary)")
+            _LOGGER.info("openobserve: listening for lifecycle events")
 
-    if opts.get(CONF_LOG_HA_FULL_STATE_CHANGES):
-        for et in CORE_STATE_EVENTS:
-            cancel_listeners.append(
-                hass.bus.async_listen(
-                    et, make_event_handler(et, state_only=False)
+        if opts.get(CONF_LOG_HA_STATE_CHANGES):
+            for et in CORE_STATE_EVENTS:
+                cancel_listeners.append(
+                    hass.bus.async_listen(
+                        et, make_event_handler(et, state_only=True)
+                    )
                 )
-            )
-        _LOGGER.info("openobserve: listening for state changes (full)")
+            _LOGGER.info("openobserve: listening for state changes (summary)")
 
-    if opts.get(CONF_LOG_HA_CORE_ACTIVITY):
-        for et in CORE_ACTIVITY_EVENTS:
-            cancel_listeners.append(
-                hass.bus.async_listen(et, make_event_handler(et))
-            )
-        _LOGGER.info("openobserve: listening for core activity events")
+        if opts.get(CONF_LOG_HA_FULL_STATE_CHANGES):
+            for et in CORE_STATE_EVENTS:
+                cancel_listeners.append(
+                    hass.bus.async_listen(
+                        et, make_event_handler(et, state_only=False)
+                    )
+                )
+            _LOGGER.info("openobserve: listening for state changes (full)")
+
+        if opts.get(CONF_LOG_HA_CORE_ACTIVITY):
+            for et in CORE_ACTIVITY_EVENTS:
+                cancel_listeners.append(
+                    hass.bus.async_listen(et, make_event_handler(et))
+                )
+            _LOGGER.info("openobserve: listening for core activity events")
+    else:
+        _LOGGER.info("openobserve: bus event capture disabled")
 
     flush_task = asyncio.create_task(client.flush_loop())
 
@@ -169,11 +214,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenObserveConfigEntry) 
             schema=cv.make_entity_service_schema({}),
         )
 
-    _LOGGER.info(
-        "openobserve: forwarding logs to %s and events to %s",
-        client.log_url,
-        client.event_url,
-    )
+    targets: list[str] = []
+    if capture_logs:
+        targets.append(f"logs -> {client.log_url}")
+    if capture_events:
+        targets.append(f"events -> {client.event_url}")
+    if targets:
+        _LOGGER.info("openobserve: forwarding %s", "; ".join(targets))
+    else:
+        _LOGGER.warning("openobserve: log and event capture are both disabled")
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True

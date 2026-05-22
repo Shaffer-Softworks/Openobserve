@@ -1,43 +1,36 @@
 # HACS default repository checklist
 
-Target: include **Shaffer-Softworks/Openobserve** in [hacs/default](https://github.com/hacs/default) `integration` list.
+Target: **Shaffer-Softworks/Openobserve** in [hacs/default](https://github.com/hacs/default) `integration` list.
 
-## Repo requirements (this repository)
+## Repo requirements
 
 | Item | Status |
 |------|--------|
 | Single integration under `custom_components/openobserve/` | Done |
-| `manifest.json` (domain, version, docs, issues, codeowners) | Done |
-| `hacs.json` with `name` | Done |
-| `info.md` or README (`render_readme: true`) | Done |
+| `manifest.json`, `hacs.json`, `info.md` | Done |
 | Brand assets in `custom_components/openobserve/brand/` | Done |
-| GitHub Actions: hassfest + HACS action | `.github/workflows/validate.yaml` |
-| GitHub releases | v0.2.0+ |
-| Repo description, topics, issues enabled | Set via `gh repo edit` |
-
-## Before opening the hacs/default PR
-
-1. Confirm **Validate** workflow is green on `main`.
-2. Submitter must be **repo owner** or major contributor; PR must come from a **personal fork** (not org).
-3. Optional but recommended: add domain to [home-assistant/brands](https://github.com/home-assistant/brands) if the default-repo brands check does not yet accept in-integration `brand/` (HA 2026.3+).
+| GitHub Actions: hassfest + HACS (no `ignore: brands`) | Done |
+| GitHub releases | v0.2.0 tag exists; publish v0.2.2+ when ready |
+| Description, topics, issues | Done |
 
 ## hacs/default PR
 
-**Open:** https://github.com/hacs/default/pull/7820 (from `sickkick/HACS` branch `add-openobserve`)
+**Open:** https://github.com/hacs/default/pull/7820
 
-| Check | Status (2026-05-20) |
-|-------|---------------------|
-| Sorted, JQ, Hassfest, HACS action, Owner, Releases, etc. | All green |
-| Next step | Mark PR **Ready for review** |
+- Fork: `sickkick/HACS`, branch `add-openobserve`
+- List entry: `"Shaffer-Softworks/Openobserve"` (casefold sort: after `hyperhdr-ha`, before `shaiu/technicolor`)
+- PR body: [checklist + 3 links](https://github.com/hacs/default/blob/master/.github/PULL_REQUEST_TEMPLATE.md) (release, HACS action, hassfest)
+- CI: was all green (2026-05-20)
+- **Next:** mark **Ready for review** when re-validated (do not request review early)
 
-1. Fork `hacs/default` to a personal account (e.g. `sickkick/HACS`).
-2. Branch from `master`.
-3. Add `"Shaffer-Softworks/Openobserve"` to `integration` sorted with `key=str.casefold` (after `hyperhdr-ha`, before `shaiu/technicolor`).
-4. PR body must include the [checklist and three action/release links](https://github.com/hacs/default/blob/master/.github/PULL_REQUEST_TEMPLATE.md).
-5. Mark **ready for review** after CI passes (do not request review early).
-
-**Validate run (integration repo):** https://github.com/Shaffer-Softworks/Openobserve/actions/runs/26174295004
+**Validate run:** https://github.com/Shaffer-Softworks/Openobserve/actions/runs/26174295004
 
 ## After merge
 
-Default store updates on the next HACS scheduled scan. Users find **OpenObserve** under Integrations without adding a custom repository.
+OpenObserve appears in the default HACS Integrations store after the next scheduled scan.
+
+## Install until then
+
+HACS → Custom repositories → `https://github.com/Shaffer-Softworks/Openobserve`
+
+Update to **0.2.2+** for thread-safety fixes (async bus listeners).
