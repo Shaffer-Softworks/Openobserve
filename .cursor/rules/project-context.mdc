@@ -16,6 +16,7 @@ alwaysApply: true
 - Default streams: `home_assistant_logs`, `home_assistant_events`
 - Flush: 5s / batch 50
 - Docker test URL: `http://openobserve:5080`
+- Releases: workflow **Create release** → bump `manifest.json`, tag `v*`, asset `openobserve.zip`, PR to `main`
 
 ## Config flow
 
