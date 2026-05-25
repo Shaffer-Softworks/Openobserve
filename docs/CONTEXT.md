@@ -19,11 +19,13 @@ Monorepo split 2026-05-20; add-on lives in separate repo.
 
 ## Integration repo (this)
 
-- `custom_components/openobserve/`, domain `openobserve`, version **0.2.2**
+- `custom_components/openobserve/`, domain `openobserve`, version **0.2.3**
 - Forwards HA system logs + bus events (lifecycle, `state_changed`, `call_service`, etc.)
 - Options: log level, event toggles, exclude globs, batch size, flush interval
 - Tests: `tests/test_handler.py`
-- Release tag on GitHub: `v0.2.0` (bump tag when publishing 0.2.2+)
+- HACS: `hacs.json` (`zip_release`, `openobserve.zip`), hassfest + hacs/action
+- Releases: **Actions → Create release** (`.github/workflows/release.yml`); same pattern as [hyperhdr-ha](https://github.com/Shaffer-Softworks/hyperhdr-ha)
+- Optional repo secret `WORKFLOW_TRIGGER_TOKEN` if PR checks stay pending after release
 
 ### Thread safety (v0.2.1 / v0.2.2)
 
@@ -60,6 +62,14 @@ export ZO_ROOT_USER_PASSWORD='your-password'
 
 LAN OpenObserve: `http://10.20.0.54:5080`, org `default`.
 
+**Credentials (local only):** `deploy/portainer/.env` (gitignored). Copy from `deploy/portainer/.env.example` if missing.
+
+**HA integration (verified 2026-05-24):**
+
+- Use **Python logging handler** (`event_based_logging: false`), min level **INFO**
+- Log stream preserves severity; event stream always has `level: info` (bus events)
+- HA global `homeassistant` logger is often **WARNING** — INFO lines are dropped by HA before export
+
 ## Add-on repo
 
 - https://github.com/Shaffer-Softworks/home-assistant-openobserve-addon
@@ -83,6 +93,7 @@ LAN OpenObserve: `http://10.20.0.54:5080`, org `default`.
 | `custom_components/openobserve/__init__.py` | Setup, async bus listeners |
 | `custom_components/openobserve/config_flow.py` | Config/options flows |
 | `deploy/docker/run.sh` | Local two-container deploy |
+| `.github/workflows/release.yml` | Manifest bump, zip asset, GitHub release, merge PR |
 | `docs/HACS_DEFAULT.md` | HACS default store submission |
 
 ## Icon attribution

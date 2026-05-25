@@ -1,0 +1,50 @@
+---
+description: Production OpenObserve ops, HA integration config, credentials (local only)
+alwaysApply: true
+---
+
+# OpenObserve production ops (local)
+
+## Credentials
+
+Read from `deploy/portainer/.env` (gitignored). Current values:
+
+| Field | Value |
+|-------|-------|
+| URL | `http://10.20.0.54:5080` |
+| Org | `default` |
+| Username | `admin@example.com` |
+| Password | `2QyU1HFryzCNE` |
+
+**Note:** RPI repo (`~/RPI`) still has stale password `UbznjBOa2fJHk1py` (ingest-only; search/login fail). HA integration uses the password above.
+
+## HA integration (production)
+
+- Config entry: `openobserve` / title **OpenObserve**
+- **Working options (2026-05-24):** `log_level: INFO`, `event_based_logging: false`
+- Avoid `event_based_logging: true` unless `system_log.fire_event: true` in `configuration.yaml` — otherwise only bus events ship (all tagged `level: info`).
+- `homeassistant` logger in HA is **WARNING** — INFO lines are suppressed before the integration sees them; WARNING/ERROR ship with correct levels.
+- Service `openobserve.flush` requires an `entity_id` (e.g. `sensor.openobserve_records_sent`).
+- Diagnostic sensors: `sensor.openobserve_records_sent`, `sensor.openobserve_last_flush`, `sensor.openobserve_last_error`
+
+## Streams
+
+| Stream | Content | `level` field |
+|--------|---------|---------------|
+| `home_assistant_logs` | Python logging handler records | `debug`, `info`, `warning`, `error`, … |
+| `home_assistant_events` | Bus events (`state_changed`, etc.) | Always `info` (by design in `handler.py`) |
+
+## API quick test
+
+```bash
+source deploy/portainer/.env
+curl -sS -u "${ZO_ROOT_USER_EMAIL}:${ZO_ROOT_USER_PASSWORD}" \
+  -X POST "${OPENOBSERVE_BASE_URL}/api/${OPENOBSERVE_ORG}/_search" \
+  -H "Content-Type: application/json" \
+  -d '{"query":{"sql":"SELECT level, count(*) AS cnt FROM home_assistant_logs WHERE record_type = '\''log'\'' GROUP BY level","start_time":0,"end_time":'$(($(date +%s)*1000000))',"from":0,"size":10},"search_type":"ui","timeout":60}'
+```
+
+## RPI Android app
+
+- Repo: `~/RPI` — `NetworkModule.kt` base URL `http://10.20.0.54:5080/api/default/`
+- Ingest stream: `android/_json` via `OpenObserveApiService.kt` (update password there if rotated)
