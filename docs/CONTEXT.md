@@ -5,7 +5,9 @@ Split from monorepo on 2026-05-20. **Add-on** lives in [home-assistant-openobser
 ## Repo scope
 
 - `custom_components/openobserve/` only (domain `openobserve`, v0.1.2+)
-- HACS: `hacs.json`, hassfest + hacs/action
+- HACS: `hacs.json` (`zip_release`, `openobserve.zip`), hassfest + hacs/action
+- Releases: **Actions → Create release** (`.github/workflows/release.yml`); same pattern as [hyperhdr-ha](https://github.com/Shaffer-Softworks/hyperhdr-ha)
+- Optional repo secret `WORKFLOW_TRIGGER_TOKEN` if PR checks stay pending after release
 - Docker test: `deploy/docker/run.sh`
 
 ## Config flow (HA 2025.12+)
