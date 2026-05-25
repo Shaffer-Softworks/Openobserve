@@ -61,6 +61,7 @@ class OpenObserveClient:
         self._log_buffer: list[dict[str, Any]] = []
         self._event_buffer: list[dict[str, Any]] = []
         self._disabled = False
+        self._flush_scheduled = False
 
         self.records_sent = 0
         self.last_flush_time: str | None = None
@@ -146,19 +147,58 @@ class OpenObserveClient:
                     f"OpenObserve returned HTTP {resp.status}: {body[:200]}"
                 )
 
-    def enqueue_log(self, record: dict[str, Any]) -> None:
+    def _on_hass_loop(self) -> bool:
+        try:
+            return asyncio.get_running_loop() is self._hass.loop
+        except RuntimeError:
+            return False
+
+    def _run_on_hass_loop(self, callback, *args: Any) -> None:
+        """Run callback on the HA event loop (required for bus worker threads)."""
+        if self._on_hass_loop():
+            callback(*args)
+        else:
+            self._hass.loop.call_soon_threadsafe(callback, *args)
+
+    def _schedule_flush(self) -> None:
+        """Schedule flush on the HA event loop (safe from any thread)."""
+        if self._disabled or self._flush_scheduled:
+            return
+        self._flush_scheduled = True
+        self._hass.loop.call_soon_threadsafe(self._async_create_flush_task)
+
+    def _async_create_flush_task(self) -> None:
+        """Run on the event loop only."""
+        self._hass.async_create_task(self._flush_wrapper())
+
+    async def _flush_wrapper(self) -> None:
+        """Flush buffers and allow another batch-triggered flush to be scheduled."""
+        try:
+            await self.flush()
+        finally:
+            self._flush_scheduled = False
+
+    def _enqueue_log_impl(self, record: dict[str, Any]) -> None:
         if self._disabled:
             return
         self._log_buffer.append(record)
         if len(self._log_buffer) >= self._batch_size:
-            self._hass.async_create_task(self.flush())
+            self._schedule_flush()
 
-    def enqueue_event(self, record: dict[str, Any]) -> None:
+    def _enqueue_event_impl(self, record: dict[str, Any]) -> None:
         if self._disabled:
             return
         self._event_buffer.append(record)
         if len(self._event_buffer) >= self._batch_size:
-            self._hass.async_create_task(self.flush())
+            self._schedule_flush()
+
+    def enqueue_log(self, record: dict[str, Any]) -> None:
+        """Enqueue a log record (thread-safe)."""
+        self._run_on_hass_loop(self._enqueue_log_impl, record)
+
+    def enqueue_event(self, record: dict[str, Any]) -> None:
+        """Enqueue an event record (thread-safe)."""
+        self._run_on_hass_loop(self._enqueue_event_impl, record)
 
     async def flush_loop(self) -> None:
         """Periodically flush buffers."""

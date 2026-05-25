@@ -6,8 +6,10 @@ Ship Home Assistant **logs** and **bus events** to [OpenObserve](https://openobs
 
 | Stream | Content |
 |--------|---------|
-| `home_assistant_logs` | Core / system logs (level filter in options) |
-| `home_assistant_events` | Startup/shutdown, state changes, service calls (configurable) |
+| `home_assistant_logs` | Core / system logs (enable **Capture logs**, level filter in options) |
+| `home_assistant_events` | Startup/shutdown, state changes, service calls (enable **Capture events**) |
+
+Turn on **Capture logs** and **Capture events** in integration options (both default on). Logs use the Python logging handler by default; optional **Use system log events** needs `system_log.fire_event: true` in `configuration.yaml`.
 
 Records are batched (default: 50 records or 5 seconds). Use service `openobserve.flush` to force a send.
 

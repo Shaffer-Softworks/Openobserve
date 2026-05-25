@@ -3,25 +3,54 @@ description: HACS OpenObserve integration repo (not the Supervisor add-on)
 alwaysApply: true
 ---
 
-# home-assistant-openobserve (HACS only)
+# Shaffer-Softworks/Openobserve (HACS integration)
 
-## Scope
+## Repos (split 2026-05-20)
 
-- **This repo**: `custom_components/openobserve/` — HACS integration
-- **Add-on repo**: https://github.com/Shaffer-Softworks/home-assistant-openobserve-addon (`openobserve_log_shipper/`)
+| Repo | Purpose |
+|------|---------|
+| **This repo** — https://github.com/Shaffer-Softworks/Openobserve | HACS integration `custom_components/openobserve/` |
+| **Add-on** — https://github.com/Shaffer-Softworks/home-assistant-openobserve-addon | Supervisor `openobserve_log_shipper/` (Fluent Bit → `/_multi`) |
 
-## Integration
+Git remote may show `sickkick/Openobserve` (redirects to Shaffer-Softworks). Current version **0.2.3**.
 
-- Ingest: `POST /api/{org}/{stream}/_json` (JSON array)
+## Integration behavior
+
+- Domain: `openobserve`
+- Ingest: `POST /api/{org}/{stream}/_json` (JSON array batches)
 - Default streams: `home_assistant_logs`, `home_assistant_events`
-- Flush: 5s / batch 50
+- Batching: 50 records or 5s; service `openobserve.flush`; diagnostic sensors
+- Brand: `custom_components/openobserve/brand/` (Dashboard Icons, Apache-2.0)
+- HACS: `hacs.json` (`zip_release`, `openobserve.zip`), `info.md`, validate + **Create release** workflows (hassfest + HACS, no `ignore: brands`)
 - Docker test URL: `http://openobserve:5080`
+- Production LAN: `http://10.20.0.54:5080`
 - Releases: workflow **Create release** → bump `manifest.json`, tag `v*`, asset `openobserve.zip`, PR to `main`
 
-## Config flow
+## Thread safety (v0.2.1+)
 
-`OpenObserveOptionsFlowHandler` uses `self._config_entry` only (HA 2025.12+). No `super().__init__(config_entry)`.
+HA runs **sync** `bus.async_listen` callbacks in a **thread pool** — do not call `hass.async_create_task` from enqueue paths.
 
-## Deploy test
+- Bus handlers: **async** `async def _handler` in `__init__.py`
+- `client.enqueue_log` / `enqueue_event`: `_run_on_hass_loop()` → `call_soon_threadsafe` when off-loop
+- Batch flush: `_schedule_flush()` → `call_soon_threadsafe` + debounced `_flush_scheduled`
+- Logging handler (`ExportingLogHandler`): calls `enqueue_log()` (thread-safe internally)
 
-`./deploy/docker/run.sh` — does not include the Supervisor add-on.
+## Config flow (HA 2025.12+)
+
+`OpenObserveOptionsFlowHandler`: `self._config_entry` only — never `self.config_entry = …` or `super().__init__(config_entry)`. User fields use `TextSelector`.
+
+## HACS default inclusion
+
+- PR: https://github.com/hacs/default/pull/7820 (`sickkick/HACS`, `add-openobserve`)
+- Entry: `"Shaffer-Softworks/Openobserve"` (casefold sort: after `hyperhdr-ha`)
+- After CI green → mark **Ready for review** (see `docs/HACS_DEFAULT.md`)
+
+## Deploy / test
+
+- `./deploy/docker/run.sh` — integration URL **`http://openobserve:5080`**
+- Production LAN: `http://10.20.0.54:5080`
+- Add-on: Supervisor only, not plain Docker HA
+
+## Git hygiene
+
+No `Co-authored-by: Cursor` in commits.
