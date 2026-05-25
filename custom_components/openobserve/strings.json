@@ -34,8 +34,10 @@
       "init": {
         "title": "OpenObserve options",
         "data": {
+          "capture_logs": "Capture logs",
+          "capture_events": "Capture events",
           "log_level": "Minimum log level",
-          "event_based_logging": "Use system log events (recommended)",
+          "event_based_logging": "Use system log events for logs",
           "log_ha_lifecycle": "Log lifecycle events",
           "log_ha_state_changes": "Log state changes (summary)",
           "log_ha_full_state_changes": "Log state changes (full attributes)",
@@ -46,8 +48,11 @@
           "flush_interval": "Flush interval (seconds)"
         },
         "data_description": {
+          "capture_logs": "Ship Python log records to the log stream (home_assistant_logs)",
+          "capture_events": "Ship HA bus events to the event stream (home_assistant_events)",
+          "log_level": "Only applies when capturing logs; filters by severity",
           "state_changed_exclude": "One glob pattern per line, e.g. sensor.*",
-          "event_based_logging": "Preserves multiline stack traces as single log entries"
+          "event_based_logging": "Use HA system_log_event bus events instead of the logging handler. Requires system_log.fire_event: true in configuration.yaml"
         }
       }
     }
