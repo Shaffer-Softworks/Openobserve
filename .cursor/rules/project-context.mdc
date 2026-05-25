@@ -12,7 +12,7 @@ alwaysApply: true
 | **This repo** — https://github.com/Shaffer-Softworks/Openobserve | HACS integration `custom_components/openobserve/` |
 | **Add-on** — https://github.com/Shaffer-Softworks/home-assistant-openobserve-addon | Supervisor `openobserve_log_shipper/` (Fluent Bit → `/_multi`) |
 
-Git remote may show `sickkick/Openobserve` (redirects to Shaffer-Softworks). Current version **0.2.2**.
+Git remote may show `sickkick/Openobserve` (redirects to Shaffer-Softworks). Current version **0.2.3**.
 
 ## Integration behavior
 
@@ -21,7 +21,10 @@ Git remote may show `sickkick/Openobserve` (redirects to Shaffer-Softworks). Cur
 - Default streams: `home_assistant_logs`, `home_assistant_events`
 - Batching: 50 records or 5s; service `openobserve.flush`; diagnostic sensors
 - Brand: `custom_components/openobserve/brand/` (Dashboard Icons, Apache-2.0)
-- HACS: `hacs.json`, `info.md`, validate workflow (hassfest + HACS, no `ignore: brands`)
+- HACS: `hacs.json` (`zip_release`, `openobserve.zip`), `info.md`, validate + **Create release** workflows (hassfest + HACS, no `ignore: brands`)
+- Docker test URL: `http://openobserve:5080`
+- Production LAN: `http://10.20.0.54:5080`
+- Releases: workflow **Create release** → bump `manifest.json`, tag `v*`, asset `openobserve.zip`, PR to `main`
 
 ## Thread safety (v0.2.1+)
 
